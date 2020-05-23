@@ -41,10 +41,12 @@ class PageViewController: UIViewController {
         
         pageControl.frame = CGRect(x: 0, y: view.frame.height - 50, width: view.frame.width, height: 50);
         pageControl.numberOfPages = self.pages.count;
+        
+        view.bringSubviewToFront(pageControl);
     }
     
     public func addPage(page: UIViewController) {
-        view.addSubview(page.view);
+        scrollView.addSubview(page.view);
         addChild(page);
         page.didMove(toParent: self);
         self.pages.append(page);
@@ -55,5 +57,4 @@ class PageViewController: UIViewController {
     @objc func pageSelectorAction(_ sender: UIPageControl) {
         scrollView.scrollRectToVisible(self.pages[sender.currentPage].view.frame, animated: true);
     }
-    
 }

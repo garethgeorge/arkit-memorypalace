@@ -10,14 +10,14 @@ import UIKit
 import SceneKit
 import ARKit
 
+
 class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
     var currentPlacement: SCNNode?
     
-    var scrollView: UIScrollView!;
-    var pageControl: UIPageControl!;
+    var pageController: PageViewController!;
     
     var pages: [UIView]!;
     
@@ -45,31 +45,21 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         sceneView.addGestureRecognizer(singleTap)
         
         
-        // layout the scroll view for pagination
-        scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: 0, height: 0));
-        scrollView.isScrollEnabled = false;
-        view.addSubview(scrollView);
+        // create the pages
+        pageController = PageViewController();
+        view.addSubview(pageController.view);
+        addChild(pageController);
         
-        // layout the paginator
-        pageControl = UIPageControl(frame: CGRect(x: 0, y: 0, width: 0, height: 0));
-        pageControl.numberOfPages = 2;
-        pageControl.addTarget(self, action: #selector(self.pageSelectorAction(_:)), for: .touchUpInside)
-        view.addSubview(pageControl);
+        // scene view page and its controller
+        let sceneViewController = UIViewController();
+        sceneViewController.view = sceneView;
+        pageController.addPage(page: sceneViewController);
         
-        // add the pages
-        self.pages = [] as [UIView];
+        // currently empty memory manager page and its controller
+        let settingsPageController = UIViewController();
+        pageController.addPage(page: settingsPageController);
         
-        // add scene view to pages
-        pages.append(sceneView);
-        view.bringSubviewToFront(sceneView);
-        scrollView.addSubview(sceneView);
-        
-        // add page 2 to pages
-        let page2 = UIView(frame: CGRect.zero);
-        scrollView.addSubview(page2);
-        pages.append(page2);
-        
-        self.viewDidLayoutSubviews();
+        view.addSubview(pageController.view);
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -81,19 +71,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
         // Run the view's session
         sceneView.session.run(configuration);
-    }
-    
-    
-    override func viewDidLayoutSubviews() {
-        scrollView!.frame = view.frame;
-        
-        for (pageIdx, page) in self.pages.enumerated() {
-            page.frame = CGRect(x: view.frame.width * CGFloat(pageIdx), y:0, width: view.frame.width, height: view.frame.height);
-        }
-        scrollView.contentSize = CGSize(width: view.frame.width * CGFloat(self.pages.count), height: view.frame.height);
-        
-        pageControl.frame = CGRect(x: 0, y: view.frame.height - 50, width: view.frame.width, height: 50);
-        pageControl.numberOfPages = self.pages.count;
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -148,9 +125,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     }
     
     // MARK - UIPageControl
-    @objc func pageSelectorAction(_ sender: UIPageControl) {
-        scrollView.scrollRectToVisible(self.pages[sender.currentPage].frame, animated: true);
-    }
     
     @objc func handleSceneViewTap(_ recognizer: UITapGestureRecognizer) {
         print("a new tap on the screen was detected!");

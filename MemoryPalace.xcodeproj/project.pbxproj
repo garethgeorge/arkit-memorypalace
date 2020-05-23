@@ -16,7 +16,7 @@
 		7F1AE426247504EF006B9E22 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7F1AE424247504EF006B9E22 /* LaunchScreen.storyboard */; };
 		7F1AE431247504EF006B9E22 /* MemoryPalaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F1AE430247504EF006B9E22 /* MemoryPalaceTests.swift */; };
 		7F1AE43C247504EF006B9E22 /* MemoryPalaceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F1AE43B247504EF006B9E22 /* MemoryPalaceUITests.swift */; };
-		7FBEA6302477950E00450EB8 /* PaginationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBEA62F2477950E00450EB8 /* PaginationViewController.swift */; };
+		7FBEA6302477950E00450EB8 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBEA62F2477950E00450EB8 /* PageViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,7 +52,7 @@
 		7F1AE437247504EF006B9E22 /* MemoryPalaceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoryPalaceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F1AE43B247504EF006B9E22 /* MemoryPalaceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPalaceUITests.swift; sourceTree = "<group>"; };
 		7F1AE43D247504EF006B9E22 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7FBEA62F2477950E00450EB8 /* PaginationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationViewController.swift; sourceTree = "<group>"; };
+		7FBEA62F2477950E00450EB8 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,15 +137,23 @@
 			isa = PBXGroup;
 			children = (
 				7F1AE41D247504ED006B9E22 /* ViewController.swift */,
+				7F7FF5282478DA8D00BD351F /* Model */,
 				7FBEA6312477955900450EB8 /* Views */,
 			);
 			path = ViewController;
 			sourceTree = "<group>";
 		};
+		7F7FF5282478DA8D00BD351F /* Model */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		7FBEA6312477955900450EB8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				7FBEA62F2477950E00450EB8 /* PaginationViewController.swift */,
+				7FBEA62F2477950E00450EB8 /* PageViewController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -282,7 +290,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7FBEA6302477950E00450EB8 /* PaginationViewController.swift in Sources */,
+				7FBEA6302477950E00450EB8 /* PageViewController.swift in Sources */,
 				7F1AE41E247504ED006B9E22 /* ViewController.swift in Sources */,
 				7F1AE41A247504ED006B9E22 /* AppDelegate.swift in Sources */,
 				7F1A24E92475129C0066F187 /* Utils.swift in Sources */,
