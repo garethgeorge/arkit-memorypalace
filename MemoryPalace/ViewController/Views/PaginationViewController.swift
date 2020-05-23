@@ -11,6 +11,7 @@ import UIKit.UIScrollView;
 
 class PageViewController: UIViewController {
     private var scrollView: UIScrollView!;
+    private var pageControl: UIPageControl!;
     public var pages: [UIViewController]! = [];
     
     convenience init() {
@@ -30,10 +31,29 @@ class PageViewController: UIViewController {
         view.addSubview(pageControl);
     }
     
+    override func viewDidLayoutSubviews() {
+        scrollView!.frame = view.frame;
+        
+        for (pageIdx, page) in self.pages.enumerated() {
+            page.view.frame = CGRect(x: view.frame.width * CGFloat(pageIdx), y:0, width: view.frame.width, height: view.frame.height);
+        }
+        scrollView.contentSize = CGSize(width: view.frame.width * CGFloat(self.pages.count), height: view.frame.height);
+        
+        pageControl.frame = CGRect(x: 0, y: view.frame.height - 50, width: view.frame.width, height: 50);
+        pageControl.numberOfPages = self.pages.count;
+    }
+    
     public func addPage(page: UIViewController) {
         view.addSubview(page.view);
         addChild(page);
         page.didMove(toParent: self);
         self.pages.append(page);
+        
+        self.viewDidLayoutSubviews();
     }
+    
+    @objc func pageSelectorAction(_ sender: UIPageControl) {
+        scrollView.scrollRectToVisible(self.pages[sender.currentPage].view.frame, animated: true);
+    }
+    
 }
