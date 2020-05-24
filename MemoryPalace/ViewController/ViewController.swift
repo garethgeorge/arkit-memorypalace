@@ -24,10 +24,13 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Set the view's delegate
-        sceneView.delegate = self
         
-        // Show statistics such as fps and timing information
+        // setup the app data
+        let appData = AppData();
+        AppDataController.global = AppDataController(appData: appData);
+        
+        // setup the scene view (todo: make a new controller for the scene view)
+        sceneView.delegate = self
         sceneView.showsStatistics = true
         
         // Create a new scene
@@ -44,7 +47,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         singleTap.numberOfTapsRequired = 1
         sceneView.addGestureRecognizer(singleTap)
         
-        
         // create the pages
         pageController = PageViewController();
         view.addSubview(pageController.view);
@@ -56,10 +58,25 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         pageController.addPage(page: sceneViewController);
         
         // currently empty memory manager page and its controller
-        let settingsPageController = UIViewController();
-        pageController.addPage(page: settingsPageController);
+        pageController.addPage(page: MemMarkerListViewController());
         
         view.addSubview(pageController.view);
+        
+        NotificationCenter.default.addObserver(forName: .memoryMarkerRemoved, object: nil, queue: nil, using: {(notification) in
+            guard let marker = notification.object as? MemoryMarker else {
+                print("notification object was not a memory marker... :(");
+                return
+            }
+            for anchor in self.sceneView.session.currentFrame!.anchors {
+                print("scanning anchors to process removal!");
+                //
+                // NOTE: IN PROGRESS FOR TOMORROW, REMOVE ANCHOR COMPONENT WHEN ANCHOR IS REMOVED
+                //
+                if anchor.name == marker.id {
+                    self.sceneView.session.remove(anchor: anchor);
+                }
+            }
+        });
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -110,18 +127,23 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         guard let name = anchor.name else {
             return ;
         }
-        if name == "memory" {
-            // create a cursor sphere
-            let sphere = SCNSphere(radius: 0.02);
-            sphere.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0, blue: 0, alpha: 1);
-
-            let marker = SCNNode(geometry: sphere);
-//            marker.position = SCNVector3(hitResult.columns.3.x, hitResult.columns.3.y, hitResult.columns.3.z);
-            marker.categoryBitMask = 0b100;
-            
-            
-            node.addChildNode(marker);
+        
+        // only markers with id's are rendered
+        guard let marker = AppDataController.global.getMemoryMarker(id: name) else {
+            print("ERROR!!! renderer trying to render anchor for marker " + name + " but that marker was not found in memoryMarkers table");
+            return;
         }
+        
+        print("found marker for node: ", marker);
+        
+        // create a cursor sphere
+        let sphere = SCNSphere(radius: 0.02);
+        sphere.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0, blue: 0, alpha: 1);
+
+        let sphereNode = SCNNode(geometry: sphere);
+        sphereNode.categoryBitMask = 0b100;
+        
+        node.addChildNode(sphereNode);
     }
     
     // MARK - UIPageControl
@@ -140,20 +162,39 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                 return;
             };
             
-            print("hit marker with anchor: " + anchor.name!);
+            guard let markerId = anchor.name else {
+                print("THIS SHOULD NEVER HAPPEN -- GOT A HIT, BUT NO ANCHOR.NAME WAS SET");
+                return;
+            }
+            
+            print("removing marker with id: " + markerId);
+            guard let marker = AppDataController.global.getMemoryMarker(id: markerId) else {
+                print("\tMARKER WITH THAT ID COULD NOT BE FOUND");
+                return ;
+            }
+            
+            AppDataController.global.removeMemoryMarker(marker: marker);
             
             return;
         }
         
-        
+        // okay, we didn't hit an existing marker so lets check if we can create a new one
         let query = sceneView.raycastQuery(from: touchLocation, allowing: .estimatedPlane, alignment: .any)!;
         guard let result = sceneView.session.raycast(query).first else {
             print("NO INTERSECTION / RESULT");
             return;
         }
         
-        let anchor = ARAnchor(name: "memory", transform: result.worldTransform);
+        // we got a hit, create the marker
+        let newMarker = AppDataController.global.addMemoryMarker(question: "", answer: "");
+        
+        let anchor = ARAnchor(name: newMarker.id, transform: result.worldTransform);
         sceneView.session.add(anchor: anchor);
-//        sceneView.scene.rootNode.addChildNode(marker);
+        
+        let editor = MemMarkerEditorViewController(marker: newMarker);
+        
+//        addChild(editor);
+//        view.addSubview(editor.view);
+        present(editor, animated: true, completion: nil);
     }
 }

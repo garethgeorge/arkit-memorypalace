@@ -9,7 +9,7 @@
 import Foundation
 import UIKit.UIScrollView;
 
-class PageViewController: UIViewController {
+class PageViewController: UIViewController, UIScrollViewDelegate {
     private var scrollView: UIScrollView!;
     private var pageControl: UIPageControl!;
     public var pages: [UIViewController]! = [];
@@ -21,7 +21,8 @@ class PageViewController: UIViewController {
     override func viewDidLoad() {
         // add the subview 
         scrollView = UIScrollView();
-        scrollView.isScrollEnabled = false;
+        scrollView.delegate = self;
+        scrollView.isPagingEnabled = true;
         view.addSubview(scrollView);
         
         // page control
@@ -54,7 +55,27 @@ class PageViewController: UIViewController {
         self.viewDidLayoutSubviews();
     }
     
+    public func scrollToPage(pageIdx: Int) {
+        pageControl.currentPage = pageIdx;
+        scrollView.scrollRectToVisible(self.pages[pageIdx].view.frame, animated: true);
+    }
+    
     @objc func pageSelectorAction(_ sender: UIPageControl) {
-        scrollView.scrollRectToVisible(self.pages[sender.currentPage].view.frame, animated: true);
+        scrollToPage(pageIdx: sender.currentPage);
+    }
+    
+    // MARK: UIScrollViewDelegate
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        self.stoppedScrolling()
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            self.stoppedScrolling()
+        }
+    }
+
+    func stoppedScrolling() {
+        pageControl.currentPage = Int(scrollView.contentOffset.x / scrollView.frame.width);
     }
 }
