@@ -23,6 +23,8 @@ class PageViewController: UIViewController, UIScrollViewDelegate {
         scrollView = UIScrollView();
         scrollView.delegate = self;
         scrollView.isPagingEnabled = true;
+        scrollView.isScrollEnabled = false;
+
         view.addSubview(scrollView);
         
         // page control
@@ -40,7 +42,7 @@ class PageViewController: UIViewController, UIScrollViewDelegate {
         }
         scrollView.contentSize = CGSize(width: view.frame.width * CGFloat(self.pages.count), height: view.frame.height);
         
-        pageControl.frame = CGRect(x: 0, y: view.frame.height - 50, width: view.frame.width, height: 50);
+        pageControl.frame = CGRect(x: 0, y: view.frame.height - 60, width: view.frame.width, height: 60);
         pageControl.numberOfPages = self.pages.count;
         
         view.bringSubviewToFront(pageControl);

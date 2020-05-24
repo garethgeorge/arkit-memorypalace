@@ -67,6 +67,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                 print("notification object was not a memory marker... :(");
                 return
             }
+            
+            // remove the anchor if it is found
             for anchor in self.sceneView.session.currentFrame!.anchors {
                 print("scanning anchors to process removal!");
                 //
@@ -75,6 +77,42 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                 if anchor.name == marker.id {
                     self.sceneView.session.remove(anchor: anchor);
                 }
+            }
+            
+            // remove the associated view
+            if let markerView = marker.markerView {
+                markerView.removeFromSuperview();
+            }
+        });
+        
+        NotificationCenter.default.addObserver(forName: .memoryMarkerAdded, object: nil, queue: nil, using: {(notification) in
+            guard let marker = notification.object as? MemoryMarker else {
+                print("notification object was not a memory marker... :(");
+                return
+            }
+            
+            let strokeTextAttributes: [NSAttributedString.Key : Any] = [
+                .strokeColor : UIColor.black,
+                .foregroundColor : UIColor.white,
+                .strokeWidth : -2.0,
+            ]
+            
+            let markerLabel = UILabel();
+            markerLabel.attributedText = NSAttributedString(string: "Q: " + marker.question, attributes: strokeTextAttributes);
+            marker.markerView = markerLabel;
+            self.sceneView.addSubview(markerLabel);
+            markerLabel.sizeToFit();
+        });
+        
+        NotificationCenter.default.addObserver(forName: .memoryMarkerUpdated, object: nil, queue: nil, using: {(notification) in
+            guard let marker = notification.object as? MemoryMarker else {
+                print("notification object was not a memory marker... :(");
+                return
+            }
+            
+            if let markerLabel = marker.markerView as? UILabel {
+                markerLabel.text = "Q: " + marker.question;
+                markerLabel.sizeToFit();
             }
         });
     }
@@ -108,19 +146,40 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     }
 */
     
+    // TODO: properly handle error cases etc for a way to handle repositioning and whatnot :P
+    
     func session(_ session: ARSession, didFailWithError error: Error) {
         // Present an error message to the user
-        
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
         // Inform the user that the session has been interrupted, for example, by presenting an overlay
-        
     }
     
     func sessionInterruptionEnded(_ session: ARSession) {
         // Reset tracking and/or remove existing anchors if consistent tracking is required
-        
+    }
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+            let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+            
+            if let anchor = marker.anchor {
+                // do stuff with anchor
+                
+                let markerLocation = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z);
+                let markerScrPos3 = sceneView.projectPoint(markerLocation); // z can be ignored, it is indicative of the depth of the pixel in the scene
+                
+                if let markerView = marker.markerView {
+                    markerView.frame = CGRect(
+                        x: CGFloat(markerScrPos3.x),
+                        y: CGFloat(markerScrPos3.y),
+                        width: markerView.frame.width,
+                        height: markerView.frame.height
+                    );
+                }
+            }
+        }
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -133,7 +192,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             print("ERROR!!! renderer trying to render anchor for marker " + name + " but that marker was not found in memoryMarkers table");
             return;
         }
-        
         print("found marker for node: ", marker);
         
         // create a cursor sphere
@@ -173,7 +231,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                 return ;
             }
             
-            AppDataController.global.removeMemoryMarker(marker: marker);
+            let editor = MemMarkerEditorViewController(marker: marker, removeOnCancel: false);
+            present(editor, animated: true, completion: nil);
             
             return;
         }
@@ -186,15 +245,14 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         
         // we got a hit, create the marker
-        let newMarker = AppDataController.global.addMemoryMarker(question: "", answer: "");
+        let marker = AppDataController.global.addMemoryMarker(question: "", answer: "");
         
-        let anchor = ARAnchor(name: newMarker.id, transform: result.worldTransform);
-        sceneView.session.add(anchor: anchor);
+        // anchor needs to be created here to provide access to the result worldTransform
+        let anchor = ARAnchor(name: marker.id, transform: result.worldTransform);
+        marker.anchor = anchor;
+        self.sceneView.session.add(anchor: anchor);
         
-        let editor = MemMarkerEditorViewController(marker: newMarker);
-        
-//        addChild(editor);
-//        view.addSubview(editor.view);
+        let editor = MemMarkerEditorViewController(marker: marker, removeOnCancel: true);
         present(editor, animated: true, completion: nil);
     }
 }

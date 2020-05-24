@@ -7,13 +7,21 @@
 //
 
 import Foundation
+import ARKit
+import UIKit
 
 
 // memory marker data type
+// TODO: split memory marker value type and MemoryMarkerController type which should manage the lifecycle
+
 class MemoryMarker: Codable {
     var id: String;
     var question: String;
     var answer: String;
+    
+    // TODO: these fields need to not be serialized
+    var markerView: UIView?;
+    var anchor: ARAnchor?;
     
     init(id: String, question: String, answer: String) {
         self.id = id;
@@ -21,11 +29,13 @@ class MemoryMarker: Codable {
         self.answer = answer;
     }
     
+    func isValid() -> Bool {
+        return question.trimmingCharacters(in: .whitespaces) != "" && answer.trimmingCharacters(in: .whitespaces) != "";
+    }
     
-   func isValid() -> Bool {
-       return question.trimmingCharacters(in: .whitespaces) != "" && answer.trimmingCharacters(in: .whitespaces) != "";
-   }
-       
+    private enum CodingKeys: String, CodingKey {
+        case id, question, answer
+    }
 };
 
 // struct to hold the app data

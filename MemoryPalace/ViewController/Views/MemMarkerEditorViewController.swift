@@ -19,15 +19,19 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
     
     var questionField: UITextField!;
     var answerField: UITextField!;
+    var deleteButton: UIButton!;
     
-    convenience init(marker: MemoryMarker) {
+    var removeOnCancel: Bool = false;
+    
+    convenience init(marker: MemoryMarker, removeOnCancel: Bool = false) {
         self.init(nibName:nil, bundle:nil)
         self.marker = marker;
+        self.removeOnCancel = removeOnCancel;
     }
     
     override func viewDidLoad() {
         // add rounded corners
-        view.layer.cornerRadius = 20.0;
+        view.layer.cornerRadius = 15.0;
         view.clipsToBounds = true;
         view.backgroundColor = .secondarySystemBackground;
         
@@ -42,19 +46,16 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         let title = UINavigationItem(title: "Memory Marker Editor");
         // set the done button
         doneButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.done, target: nil, action: #selector(doneButtonPressed));
-        doneButton.isEnabled = false;
+        doneButton.isEnabled = marker.isValid();
         title.rightBarButtonItem = doneButton;
         title.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.cancel, target: nil, action: #selector(cancelButtonPressed))
         
-        
         navBar.setItems([title], animated: false);
-        
         
         // content view
         content = UIStackView();
         content.axis = .vertical;
         content.alignment = .fill;
-//        content.distribution = .equalSpacing;
         content.spacing = 5;
         view.addSubview(content);
         
@@ -80,6 +81,19 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         answerField.text = marker.answer;
         answerField.delegate = self;
         content.addArrangedSubview(answerField);
+        
+        content.addArrangedSubview(UIView());
+        
+        // delete button
+        deleteButton = UIButton();
+        deleteButton.layer.cornerRadius = 5;
+        deleteButton.layer.borderWidth = 1;
+        deleteButton.layer.borderColor = UIColor.red.cgColor;
+        deleteButton.setTitle("REMOVE MARKER", for: .normal);
+        deleteButton.setTitleColor(UIColor.red, for: .normal);
+        deleteButton.addTarget(self, action: #selector(deleteButtonPressed), for: .touchUpInside);
+
+        content.addArrangedSubview(deleteButton);
     }
     
     override func viewWillLayoutSubviews() {
@@ -87,11 +101,11 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         let minDim = min(parentFrame.width, parentFrame.height) * 0.9;
         view.frame = CGRect(
             x: (parentFrame.width - minDim) / 2.0, y: minDim * 0.2,
-            width: minDim, height: minDim
+            width: minDim, height: 150 + 60 + 10
         );
         
         navBar.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 40);
-        content.frame = CGRect(x: 5, y: 60, width: view.frame.width - 10, height: 100);
+        content.frame = CGRect(x: 10, y: 60, width: view.frame.width - 20, height: 150);
     }
     
     
@@ -137,12 +151,25 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         self.dismiss(animated: true, completion: nil);
     }
     
+    @objc func deleteButtonPressed(sender: UIButton!) {
+        print("MemMarkerEditor Delete button Pressed");
+        
+        answerField.resignFirstResponder();
+        questionField.resignFirstResponder();
+        AppDataController.global.removeMemoryMarker(marker: marker);
+        
+        self.dismiss(animated: true, completion: nil);
+    }
+    
     @objc func cancelButtonPressed() {
         print("MemMarkerEditor cancel button pressed");
         
         answerField.resignFirstResponder();
         questionField.resignFirstResponder();
-        AppDataController.global.removeMemoryMarker(marker: marker);
+        
+        if (removeOnCancel) {
+            AppDataController.global.removeMemoryMarker(marker: marker);
+        }
         
         self.dismiss(animated: true, completion: nil);
     }

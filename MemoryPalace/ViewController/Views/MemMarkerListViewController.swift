@@ -9,14 +9,26 @@
 import Foundation
 import UIKit
 
-class MemMarkerListViewController: UIViewController, UITableViewDataSource {
+class MemMarkerListCell : UITableViewCell {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: .subtitle, reuseIdentifier: reuseIdentifier);
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+class MemMarkerListViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     public var markerTable: UITableView!;
     
     override func viewDidLoad() {
         print("CREATING UI TABLE VIEW!");
         markerTable = UITableView(frame: view.frame, style: .plain);
         markerTable.dataSource = self;
-        markerTable.register(UITableViewCell.self, forCellReuseIdentifier: "Cell");
+        markerTable.delegate = self;
+        markerTable.register(MemMarkerListCell.self, forCellReuseIdentifier: "Cell");
         view.addSubview(markerTable);
         
         // on marker add / remove reload the table
@@ -51,6 +63,26 @@ class MemMarkerListViewController: UIViewController, UITableViewDataSource {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath);
         cell.textLabel?.text = memoryMarker.question;
+        cell.detailTextLabel?.text = memoryMarker.answer;
         return cell;
+    }
+    
+    func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        print("TABLE VIEW TRYING TO SELECT ROW AT INDEX!");
+        let editor = MemMarkerEditorViewController(marker: AppDataController.global.getMemoryMarker(idx: indexPath.row));
+        present(editor, animated: true, completion: nil);
+        
+        return indexPath;
+    }
+    
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true;
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == .delete) {
+            print("DELETING ROW IN TABLE");
+            AppDataController.global.removeMemoryMarker(marker: AppDataController.global.getMemoryMarker(idx: indexPath.row));
+        }
     }
 }
