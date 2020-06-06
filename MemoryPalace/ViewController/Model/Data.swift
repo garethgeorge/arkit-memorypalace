@@ -97,6 +97,32 @@ class AppDataController {
         appData.memoryMarkers[existingIdx] = marker;
         NotificationCenter.default.post(name: .memoryMarkerUpdated, object: marker);
     }
+    
+    lazy var mapSaveURL: URL = {
+        do {
+            return try FileManager.default
+                .url(for: .documentDirectory,
+                     in: .userDomainMask,
+                     appropriateFor: nil,
+                     create: true)
+                .appendingPathComponent("map.arexperience")
+        } catch {
+            fatalError("Can't get file save URL: \(error.localizedDescription)")
+        }
+    }();
+    
+    lazy var markerSaveURL: URL = {
+        do {
+            return try FileManager.default
+                .url(for: .documentDirectory,
+                     in: .userDomainMask,
+                     appropriateFor: nil,
+                     create: true)
+                .appendingPathComponent("markerdata.json")
+        } catch {
+            fatalError("Can't get file save URL: \(error.localizedDescription)")
+        }
+    }();
 }
 
 extension Notification.Name {
