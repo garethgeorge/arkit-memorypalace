@@ -148,7 +148,10 @@ class AppDataController {
             appData = loadedAppData;
             print("loadExperience read marker data: " + String(data: jsonData, encoding: .utf8)!);
         } catch {
-            fatalError("Can't load the marker data: \(error.localizedDescription)")
+            let alert = UIAlertController(title: "Load Error", message: "No available worldmap to load -- please create a few markers and save your world first", preferredStyle: .alert);
+            svc.present(alert, animated: true, completion: nil);
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: { _ in alert.dismiss(animated: true, completion: nil)} );
+            return;
         }
         
         let worldMap: ARWorldMap = {

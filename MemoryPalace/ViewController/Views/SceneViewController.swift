@@ -13,7 +13,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     public var sceneView: ARSCNView!
     
     private var statusLabel: UILabel!;
-//    private var promptLabel: UILabel!;
+    private var sessionInfoLabel: UILabel!;
     private var canPlaceMarkers: Bool = false;
     
 //    private var resetButton: UIButton!;
@@ -43,7 +43,16 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         statusLabel.layer.cornerRadius = 8;
         statusLabel.layer.masksToBounds = true;
         statusLabel.textAlignment = .center;
+        statusLabel.isHidden = true;
         self.view.addSubview(statusLabel);
+        
+        sessionInfoLabel = UILabel();
+        sessionInfoLabel.numberOfLines = 0;
+        sessionInfoLabel.backgroundColor = labelBackgroundColor;
+        sessionInfoLabel.layer.cornerRadius = 8;
+        sessionInfoLabel.layer.masksToBounds = true;
+        sessionInfoLabel.textAlignment = .center;
+        self.view.addSubview(sessionInfoLabel);
         
         // add save and load buttons
         saveLoadContainer = UIStackView();
@@ -141,34 +150,55 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         self.sceneView.frame = self.view.frame;
         
         self.saveLoadContainer.frame = CGRect(x: 20, y: self.view.frame.height - 150, width: self.view.frame.width - 40, height: 50);
-        
     }
     
-    // MARK: - ARSCNViewDelegate
-/*
-    // Override to create and configure nodes for anchors added to the view's session.
-    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-        let node = SCNNode()
-     
-        return node
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
+        return true;
     }
-*/
-    
-    // TODO: properly handle error cases etc for a way to handle repositioning and whatnot :P
     
     func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
+        sessionInfoLabel.text = "Session failed: \(error.localizedDescription)";
+        
+        guard error is ARError else { return }
+        
+        let errorWithInfo = error as NSError
+        let messages = [
+            errorWithInfo.localizedDescription,
+            errorWithInfo.localizedFailureReason,
+            errorWithInfo.localizedRecoverySuggestion
+        ]
+        
+        // Remove optional error messages.
+        let errorMessage = messages.compactMap({ $0 }).joined(separator: "\n")
+        
+        DispatchQueue.main.async {
+            // Present an alert informing about the error that has occurred.
+            let alertController = UIAlertController(title: "The AR session failed.", message: errorMessage, preferredStyle: .alert)
+            let restartAction = UIAlertAction(title: "Restart Session", style: .default) { _ in
+                alertController.dismiss(animated: true, completion: nil)
+                
+                let configuration = ARWorldTrackingConfiguration()
+                configuration.planeDetection = [.horizontal, .vertical];
+                self.sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors]);
+                
+                AppDataController.global.removeAllMarkers();
+            }
+            alertController.addAction(restartAction)
+            self.present(alertController, animated: true, completion: nil)
+        }
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
+        sessionInfoLabel.text = "Session was interrupted";
     }
     
     func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
+        sessionInfoLabel.text = "Session interruption ended";
     }
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        self.updateStatusLabels();
+        
         // relocate all of the labels associated with the markers and whatnot
         for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
             let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
@@ -189,30 +219,10 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 }
             }
         }
-        
-        // update the status label and manage its layout
-        statusLabel.text = """
-        Mapping: \(frame.worldMappingStatus.description)
-        Tracking: \(frame.camera.trackingState.description)
-        """
-        statusLabel.frame = CGRect(x: 0, y: 50, width: 200, height: 200);
-        statusLabel.sizeToFit();
-        var labelFrame = statusLabel.frame;
-        labelFrame.size.width += 20;
-        labelFrame.size.height += 20;
-        statusLabel.frame = labelFrame;
-        statusLabel.center.x = self.view.center.x;
-        
-        // update the prompt label
-        updatePromptLabel(for: frame, trackingState: frame.camera.trackingState);
-        
-        // update the canPlaceMarkers property
-        switch frame.worldMappingStatus {
-        case .extending, .mapped:
-            canPlaceMarkers = true;
-        default:
-            canPlaceMarkers = false;
-        }
+    }
+    
+    func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
+        self.updateStatusLabels();
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -225,9 +235,8 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             print("ERROR!!! renderer trying to render anchor for marker " + name + " but that marker was not found in memoryMarkers table");
             return;
         }
-        print("found marker for node: ", marker);
         
-        // create a cursor sphere
+        // create a marker sphere
         let sphere = SCNSphere(radius: 0.02);
         sphere.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0, blue: 0, alpha: 1);
 
@@ -296,9 +305,57 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         present(editor, animated: true, completion: nil);
     }
     
-    private func updatePromptLabel(for frame: ARFrame, trackingState: ARCamera.TrackingState) {
-        // Update the UI to provide feedback on the state of the AR experience.
+    private func updateStatusLabels() {
+        guard let frame = sceneView.session.currentFrame else {
+            return;
+        }
+        
+        // update the status label and manage its layout
+        statusLabel.text = """
+        Mapping: \(frame.worldMappingStatus.description)
+        Tracking: \(frame.camera.trackingState.description)
+        """
+        statusLabel.frame = CGRect(x: 0, y: 50, width: 200, height: 200);
+        statusLabel.sizeToFit();
+        var labelFrame = statusLabel.frame;
+        labelFrame.size.width += 20;
+        labelFrame.size.height += 20;
+        statusLabel.frame = labelFrame;
+        statusLabel.center.x = self.view.center.x;
+        
+        // update the canPlaceMarkers property
+        switch frame.worldMappingStatus {
+        case .mapped:
+            canPlaceMarkers = true;
+        default:
+            canPlaceMarkers = false;
+        }
+        
+        // update the sessionInfoLabel
         let message: String
+        
+//        snapshotThumbnail.isHidden = true
+        switch (frame.camera.trackingState, frame.worldMappingStatus) {
+        case (.normal, .mapped):
+            message = "Tap the screen to place a marker. Tap 'SAVE' to save your memory palace";
+        case (.normal, _):
+            message = "Move around to map the environment."
+        case (.limited(.relocalizing), _):
+            message = "Move your device to the location shown in the image."
+//            snapshotThumbnail.isHidden = false
+        default:
+            message = frame.camera.trackingState.localizedFeedback
+        }
+        
+        sessionInfoLabel.text = message
+        sessionInfoLabel.isHidden = message.isEmpty
+        sessionInfoLabel.sizeToFit();
+        var sessionInfoLabelFrame = sessionInfoLabel.frame;
+        sessionInfoLabelFrame.size.width += 20;
+        sessionInfoLabelFrame.size.height += 20;
+        sessionInfoLabel.frame = sessionInfoLabelFrame;
+        sessionInfoLabel.center.x = self.view.center.x;
+        sessionInfoLabel.center.y = self.view.frame.height - 200;
     }
     
     
@@ -306,6 +363,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         print("SAVE BUTTON TAPPED");
         AppDataController.global.saveExperience(svc: self);
     }
+    
     @objc func loadButtonTapped() {
         print("LOAD BUTTON TAPPED");
         AppDataController.global.loadExperience(svc: self);
