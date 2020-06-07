@@ -19,8 +19,10 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
 //    private var resetButton: UIButton!;
     private var saveLoadContainer: UIStackView!;
     private var saveButton: UIButton!;
+    private var segmentedControl: UISegmentedControl!;
     private var loadButton: UIButton!;
     public var relocalizationImage: UIImageView!;
+
     
     override func viewDidLoad() {
         super.viewDidLoad();
@@ -85,6 +87,19 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         singleTap.numberOfTapsRequired = 1
         sceneView.addGestureRecognizer(singleTap)
         
+        // segmented control for display mode
+        segmentedControl = UISegmentedControl(frame: CGRect(x: 20, y: 50, width: self.view.frame.width - 40, height: 40));
+        segmentedControl.backgroundColor = .clear
+        segmentedControl.insertSegment(withTitle: "Learn (Q+A)", at: 0, animated: true)
+        segmentedControl.insertSegment(withTitle: "Term  (Q)", at: 1, animated: true)
+        segmentedControl.insertSegment(withTitle: "Definition (A)", at: 2, animated: true)
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = true
+        segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged(_:)), for: .valueChanged);
+
+        self.view.addSubview(segmentedControl)
+
+        
         NotificationCenter.default.addObserver(forName: .memoryMarkerRemoved, object: nil, queue: nil, using: {(notification) in
             guard let marker = notification.object as? MemoryMarker else {
                 print("notification object was not a memory marker... :(");
@@ -129,10 +144,11 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 return
             }
             
-            if let markerLabel = marker.markerView as? UILabel {
-                markerLabel.text = "Q: " + marker.question;
-                markerLabel.sizeToFit();
-            }
+//            if let markerLabel = marker.markerView as? UILabel {
+//                markerLabel.text = "Q: " + marker.question;
+//                markerLabel.sizeToFit();
+//            }
+            self.changeMarkerView();
         });
     }
     
@@ -374,4 +390,48 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         print("LOAD BUTTON TAPPED");
         AppDataController.global.loadExperience(svc: self);
     }
+    
+    func changeMarkerView(){
+        if (self.segmentedControl.selectedSegmentIndex == 0){
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                   markerLabel.text = "Q: " + marker.question + "\n" + "A: " + marker.answer;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+
+        } else if(self.segmentedControl.selectedSegmentIndex == 1){
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                    markerLabel.text = "Q: " + marker.question;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+        } else {
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                    markerLabel.text = "A: " + marker.answer;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+        }
+
+    }
+    @objc func segmentedControlValueChanged(_ sender: UISegmentedControl) {
+        print(self.segmentedControl.selectedSegmentIndex)
+        self.changeMarkerView()
+    }
+
 }

@@ -20,6 +20,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        overrideUserInterfaceStyle = .dark;
+        
         // setup the app data
         let appData = AppData();
         AppDataController.global = AppDataController(appData: appData);
