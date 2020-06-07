@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import RGSColorSlider
 
 class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
     var navBar: UINavigationBar!;
@@ -22,6 +23,7 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
     var deleteButton: UIButton!;
     
     var removeOnCancel: Bool = false;
+    var colorSlider: RGSColorSlider!;
     
     convenience init(marker: MemoryMarker, removeOnCancel: Bool = false) {
         self.init(nibName:nil, bundle:nil)
@@ -57,8 +59,13 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         content.axis = .vertical;
         content.alignment = .fill;
         content.spacing = 5;
+        content.distribution = .equalCentering;
         view.addSubview(content);
         
+        colorSlider = RGSColorSlider();
+        colorSlider.color = marker.markerView?.backgroundColor;
+        colorSlider.addTarget(self, action: #selector(changeLineColour(_:)), for: .touchDragInside)
+        content.addArrangedSubview(colorSlider);
         
         let questionFieldLabel = UILabel();
         questionFieldLabel.textColor = .secondaryLabel;
@@ -84,6 +91,7 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         
         content.addArrangedSubview(UIView());
         
+        
         // delete button
         deleteButton = UIButton();
         deleteButton.layer.cornerRadius = 5;
@@ -92,20 +100,28 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         deleteButton.setTitle("REMOVE MARKER", for: .normal);
         deleteButton.setTitleColor(UIColor.red, for: .normal);
         deleteButton.addTarget(self, action: #selector(deleteButtonPressed), for: .touchUpInside);
+        
 
         content.addArrangedSubview(deleteButton);
+        
+//        deleteButton.sizeToFit()
+
     }
     
+    @objc func changeLineColour(_ sender: Any) {
+        let color = (sender as! RGSColorSlider).color!;
+        marker.color = CodableColor(color: color);
+    }
     override func viewWillLayoutSubviews() {
         let parentFrame = view.superview!.frame
         let minDim = min(parentFrame.width, parentFrame.height) * 0.9;
         view.frame = CGRect(
             x: (parentFrame.width - minDim) / 2.0, y: minDim * 0.2,
-            width: minDim, height: 150 + 60 + 10
+            width: minDim, height: 200 + 60 + 10
         );
         
         navBar.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 40);
-        content.frame = CGRect(x: 10, y: 60, width: view.frame.width - 20, height: 150);
+        content.frame = CGRect(x: 10, y: 60, width: view.frame.width - 20, height: 200);
     }
     
     

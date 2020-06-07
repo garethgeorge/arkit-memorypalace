@@ -18,6 +18,7 @@ class MemoryMarker: Codable {
     var id: String;
     var question: String;
     var answer: String;
+    var color: CodableColor;
     
     // TODO: these fields need to not be serialized
     var markerView: UIView?;
@@ -27,6 +28,7 @@ class MemoryMarker: Codable {
         self.id = id;
         self.question = question;
         self.answer = answer;
+        self.color = CodableColor(color: .red);
     }
     
     func isValid() -> Bool {
@@ -34,7 +36,7 @@ class MemoryMarker: Codable {
     }
     
     private enum CodingKeys: String, CodingKey {
-        case id, question, answer
+        case id, question, answer, color
     }
 };
 

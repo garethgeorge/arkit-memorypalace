@@ -144,10 +144,21 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 return
             }
             
-//            if let markerLabel = marker.markerView as? UILabel {
-//                markerLabel.text = "Q: " + marker.question;
-//                markerLabel.sizeToFit();
-//            }
+            if let anchor = marker.anchor, let node = self.sceneView.node(for: anchor) {
+                // first remove current representation
+                for cld in node.childNodes {
+                    cld.removeFromParentNode();
+                }
+                
+                // replace the sphere with one of the right color
+                let sphere = SCNSphere(radius: 0.02);
+                sphere.firstMaterial?.diffuse.contents = marker.color.color;
+                let sphereNode = SCNNode(geometry: sphere);
+                sphereNode.categoryBitMask = 0b100;
+                
+                node.addChildNode(sphereNode);
+            }
+            
             self.changeMarkerView();
         });
     }
@@ -260,7 +271,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         
         // create a marker sphere
         let sphere = SCNSphere(radius: 0.02);
-        sphere.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0, blue: 0, alpha: 1);
+        sphere.firstMaterial?.diffuse.contents = marker.color.color;
 
         let sphereNode = SCNNode(geometry: sphere);
         sphereNode.categoryBitMask = 0b100;
@@ -396,10 +407,12 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                   markerLabel.text = "Q\(markerIdx):" + marker.question + "\n" + "A: " + marker.answer;
+                   markerLabel.text = "Q\(markerIdx+1):" + marker.question + "\n" + "A: " + marker.answer;
+                   markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.backgroundColor = marker.color.color.withAlphaComponent(0.4);
                    markerLabel.sizeToFit();
                 }
             }
@@ -408,10 +421,13 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                    markerLabel.text = "Q\(markerIdx):" + marker.question;
+                   markerLabel.text = "Q\(markerIdx+1):" + marker.question;
+                   markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
+
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.backgroundColor = marker.color.color.withAlphaComponent(0.4);
                    markerLabel.sizeToFit();
                 }
             }
@@ -419,10 +435,12 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                    markerLabel.text = "A\(markerIdx):" + marker.answer;
+                   markerLabel.text = "A\(markerIdx+1):" + marker.answer;
+                   markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.backgroundColor = marker.color.color.withAlphaComponent(0.4);
                    markerLabel.sizeToFit();
                 }
             }
