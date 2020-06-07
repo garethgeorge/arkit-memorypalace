@@ -20,6 +20,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var saveLoadContainer: UIStackView!;
     private var saveButton: UIButton!;
     private var loadButton: UIButton!;
+    public var relocalizationImage: UIImageView!;
     
     override func viewDidLoad() {
         super.viewDidLoad();
@@ -34,6 +35,12 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         sceneView.session.delegate = self
         sceneView.delegate = self;
         sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints];
+        
+        // add the relocalizationImageView
+        relocalizationImage = UIImageView();
+        relocalizationImage.layer.cornerRadius = 16;
+        relocalizationImage.layer.masksToBounds = true;
+        self.view.addSubview(relocalizationImage);
         
         // add the status label
         let labelBackgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 0.4);
@@ -87,9 +94,6 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             // remove the anchor if it is found
             for anchor in self.sceneView.session.currentFrame!.anchors {
                 print("scanning anchors to process removal!");
-                //
-                // NOTE: IN PROGRESS FOR TOMORROW, REMOVE ANCHOR COMPONENT WHEN ANCHOR IS REMOVED
-                //
                 if anchor.name == marker.id {
                     self.sceneView.session.remove(anchor: anchor);
                 }
@@ -150,6 +154,8 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         self.sceneView.frame = self.view.frame;
         
         self.saveLoadContainer.frame = CGRect(x: 20, y: self.view.frame.height - 150, width: self.view.frame.width - 40, height: 50);
+    
+        self.relocalizationImage.frame = CGRect(x: 20, y: 50, width: self.view.frame.width * 0.4, height: self.view.frame.height * 0.4)
     }
     
     func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
@@ -334,7 +340,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         // update the sessionInfoLabel
         let message: String
         
-//        snapshotThumbnail.isHidden = true
+        relocalizationImage.isHidden = true;
         switch (frame.camera.trackingState, frame.worldMappingStatus) {
         case (.normal, .mapped):
             message = "Tap the screen to place a marker. Tap 'SAVE' to save your memory palace";
@@ -342,7 +348,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             message = "Move around to map the environment."
         case (.limited(.relocalizing), _):
             message = "Move your device to the location shown in the image."
-//            snapshotThumbnail.isHidden = false
+            relocalizationImage.isHidden = false;
         default:
             message = frame.camera.trackingState.localizedFeedback
         }

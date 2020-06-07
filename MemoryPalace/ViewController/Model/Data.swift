@@ -167,14 +167,14 @@ class AppDataController {
         }()
         
         // Display the snapshot image stored in the world map to aid user in relocalizing.
-        /*
+        
         if let snapshotData = worldMap.snapshotAnchor?.imageData,
             let snapshot = UIImage(data: snapshotData) {
-            self.snapshotThumbnail.image = snapshot
+            svc.relocalizationImage.image = snapshot;
         } else {
             print("No snapshot image in world map")
         }
-        */
+        
         // Remove the snapshot anchor from the world map since we do not need it in the scene.
         worldMap.anchors.removeAll(where: { $0 is SnapshotAnchor })
         
@@ -201,6 +201,8 @@ class AppDataController {
         configuration.planeDetection = [.horizontal, .vertical];
         configuration.initialWorldMap = worldMap;
         svc.sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors]);
+        
+        
     }
     
     func saveExperience(svc: SceneViewController) {
