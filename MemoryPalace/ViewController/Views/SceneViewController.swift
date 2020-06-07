@@ -8,10 +8,18 @@
 
 import UIKit
 import ARKit
-
+class Responder: NSObject {
+    @objc func segmentedControlValueChanged(_ sender: UISegmentedControl) {
+        
+    }
+}
 class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     public var sceneView: ARSCNView!
-    
+    private var segmentedControl: UISegmentedControl!;
+    private var buttonBar: UIView!;
+//    private var segmentControlIndex = 0;
+//    public var segmentedController: SegmentedViewController!;
+
     convenience init() {
         self.init(nibName:nil, bundle:nil)
     }
@@ -31,10 +39,62 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints];
         
         // add gesture recognizer to sceneView
+        
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSceneViewTap(_:)))
         singleTap.cancelsTouchesInView = false
         singleTap.numberOfTapsRequired = 1
         sceneView.addGestureRecognizer(singleTap)
+        
+//        let selectorWidth = frame.width / CGFloat(self.buttonTitles.count)
+//        selectorView = UIView(frame: CGRect(x: 0, y: self.frame.height, width: selectorWidth, height: 2))
+////        selectorView.backgroundColor = selectorViewColor
+//        self.sceneView.addSubview(selectorView)
+        // add the subview
+        segmentedControl = UISegmentedControl(frame: CGRect(x: 0, y: self.view.frame.height-100, width: self.view.frame.width, height: 40));
+        segmentedControl.backgroundColor = .clear
+//        segmentedControl.frame = CGRect(x:0, y:self.view.frame.height-150, width:self.view.frame.width, height:50);
+//        segmentedControl.delegate = self;
+        
+        // Add segments
+        segmentedControl.insertSegment(withTitle: "Learn (Q+A)", at: 0, animated: true)
+        segmentedControl.insertSegment(withTitle: "Term  (Q)", at: 1, animated: true)
+        segmentedControl.insertSegment(withTitle: "Definition (A)", at: 2, animated: true)
+        // First segment is selected by default
+        segmentedControl.selectedSegmentIndex = 0
+
+        // This needs to be false since we are using auto layout constraints
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = true
+
+        // Add the segmented control to the container view
+        self.view.addSubview(segmentedControl)
+        
+//        segmentedControl.bottomAnchor.constraint(equalTo: sceneView.bottomAnchor).isActive = true
+//        // Constrain the segmented control width to be equal to the container view width
+//        segmentedControl.widthAnchor.constraint(equalTo: sceneView.widthAnchor).isActive = true
+//        // Constraining the height of the segmented control to an arbitrarily chosen value
+//        segmentedControl.heightAnchor.constraint(equalToConstant: 40).isActive = true
+
+//        view.addSubview(segmentControl);
+        
+//        buttonBar = UIView()
+//        // This needs to be false since we are using auto layout constraints
+//        buttonBar.translatesAutoresizingMaskIntoConstraints = false
+//        buttonBar.backgroundColor = UIColor.orange
+        
+        // Below view.addSubview(segmentedControl)
+//        self.view.addSubview(buttonBar)
+        
+        let responder = Responder()
+        segmentedControl.addTarget(responder, action: #selector(responder.segmentedControlValueChanged(_:)), for: .valueChanged)
+
+        // Constrain the top of the button bar to the bottom of the segmented control
+//        buttonBar.bottomAnchor.constraint(equalTo: segmentedControl.topAnchor).isActive = true
+//        buttonBar.heightAnchor.constraint(equalToConstant: 5).isActive = true
+//        // Constrain the button bar to the left side of the segmented control
+//        buttonBar.leftAnchor.constraint(equalTo: segmentedControl.leftAnchor).isActive = true
+//        // Constrain the button bar to the width of the segmented control divided by the number of segments
+//        buttonBar.widthAnchor.constraint(equalTo: segmentedControl.widthAnchor, multiplier: 1 / CGFloat(segmentedControl.numberOfSegments)).isActive = true
+        
         
         NotificationCenter.default.addObserver(forName: .memoryMarkerRemoved, object: nil, queue: nil, using: {(notification) in
             guard let marker = notification.object as? MemoryMarker else {
@@ -75,8 +135,9 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             markerLabel.attributedText = NSAttributedString(string: "Q: " + marker.question, attributes: strokeTextAttributes);
             marker.markerView = markerLabel;
             self.sceneView.addSubview(markerLabel);
-            markerLabel.sizeToFit();
+//            markerLabel.sizeToFit();
         });
+        
         
         NotificationCenter.default.addObserver(forName: .memoryMarkerUpdated, object: nil, queue: nil, using: {(notification) in
             guard let marker = notification.object as? MemoryMarker else {
@@ -85,8 +146,13 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             }
             
             if let markerLabel = marker.markerView as? UILabel {
-                markerLabel.text = "Q: " + marker.question;
-                markerLabel.sizeToFit();
+                self.changeMarkerView();
+//                markerLabel.text = "Q: " + marker.question + "A: " + marker.answer;
+//                markerLabel.numberOfLines = 0;
+//                markerLabel.lineBreakMode = .byWordWrapping;
+//                markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+//                markerLabel.sizeToFit();
+//                markerLabel.sizeToFit();
             }
         });
     }
@@ -213,5 +279,50 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         
         let editor = MemMarkerEditorViewController(marker: marker, removeOnCancel: true);
         present(editor, animated: true, completion: nil);
+    }
+    func changeMarkerView(){
+        if (self.segmentedControl.selectedSegmentIndex == 0){
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                   markerLabel.text = "Q: " + marker.question + "\n*****************\n" + "A: " + marker.answer;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+            
+        } else if(self.segmentedControl.selectedSegmentIndex == 1){
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                    markerLabel.text = "Q: " + marker.question;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+        } else {
+            for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
+                let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
+                if let markerLabel = marker.markerView as? UILabel {
+                    markerLabel.text = "A: " + marker.answer;
+                   markerLabel.numberOfLines = 0;
+                   markerLabel.lineBreakMode = .byWordWrapping;
+                   markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
+                   markerLabel.sizeToFit();
+                }
+            }
+        }
+        
+    }
+    @objc func segmentedControlValueChanged(_ sender: UISegmentedControl) {
+        print(self.segmentedControl.selectedSegmentIndex)
+        self.changeMarkerView()
+
+        
+
     }
 }
