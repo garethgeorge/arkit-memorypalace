@@ -12,9 +12,14 @@ import ARKit
 class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     public var sceneView: ARSCNView!
     
-    convenience init() {
-        self.init(nibName:nil, bundle:nil)
-    }
+    private var statusLabel: UILabel!;
+//    private var promptLabel: UILabel!;
+    private var canPlaceMarkers: Bool = false;
+    
+//    private var resetButton: UIButton!;
+    private var saveLoadContainer: UIStackView!;
+    private var saveButton: UIButton!;
+    private var loadButton: UIButton!;
     
     override func viewDidLoad() {
         super.viewDidLoad();
@@ -24,11 +29,39 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         // Create a new scene
         let scene = SCNScene(named: "art.scnassets/empty.scn")!
         
-        // Set the scene to the view
+        // setup the scene view
         sceneView.scene = scene
         sceneView.session.delegate = self
         sceneView.delegate = self;
         sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints];
+        
+        // add the status label
+        let labelBackgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 0.4);
+        statusLabel = UILabel();
+        statusLabel.numberOfLines = 0;
+        statusLabel.backgroundColor = labelBackgroundColor;
+        statusLabel.layer.cornerRadius = 8;
+        statusLabel.layer.masksToBounds = true;
+        statusLabel.textAlignment = .center;
+        self.view.addSubview(statusLabel);
+        
+        // add save and load buttons
+        saveLoadContainer = UIStackView();
+        saveLoadContainer.axis = .horizontal;
+        saveLoadContainer.alignment = .fill;
+        saveLoadContainer.distribution = .fillEqually;
+        saveLoadContainer.spacing = 5;
+        self.view.addSubview(saveLoadContainer);
+        
+        saveButton = RoundedButton();
+        saveButton.setTitle("SAVE", for: .normal)
+        saveButton.addTarget(self, action: #selector(self.saveButtonTapped), for: .touchUpInside);
+        saveLoadContainer.addArrangedSubview(saveButton);
+        
+        loadButton = RoundedButton();
+        loadButton.setTitle("LOAD", for: .normal)
+        loadButton.addTarget(self, action: #selector(self.loadButtonTapped), for: .touchUpInside);
+        saveLoadContainer.addArrangedSubview(loadButton);
         
         // add gesture recognizer to sceneView
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSceneViewTap(_:)))
@@ -75,7 +108,6 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             markerLabel.attributedText = NSAttributedString(string: "Q: " + marker.question, attributes: strokeTextAttributes);
             marker.markerView = markerLabel;
             self.sceneView.addSubview(markerLabel);
-            markerLabel.sizeToFit();
         });
         
         NotificationCenter.default.addObserver(forName: .memoryMarkerUpdated, object: nil, queue: nil, using: {(notification) in
@@ -91,8 +123,25 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         });
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated);
+        
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = [.horizontal, .vertical];
+        sceneView.session.run(configuration);
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        sceneView.session.pause()
+    }
+    
     override func viewDidLayoutSubviews() {
         self.sceneView.frame = self.view.frame;
+        
+        self.saveLoadContainer.frame = CGRect(x: 20, y: self.view.frame.height - 150, width: self.view.frame.width - 40, height: 50);
+        
     }
     
     // MARK: - ARSCNViewDelegate
@@ -120,6 +169,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        // relocate all of the labels associated with the markers and whatnot
         for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
             let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
             
@@ -138,6 +188,30 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                     );
                 }
             }
+        }
+        
+        // update the status label and manage its layout
+        statusLabel.text = """
+        Mapping: \(frame.worldMappingStatus.description)
+        Tracking: \(frame.camera.trackingState.description)
+        """
+        statusLabel.frame = CGRect(x: 0, y: 50, width: 200, height: 200);
+        statusLabel.sizeToFit();
+        var labelFrame = statusLabel.frame;
+        labelFrame.size.width += 20;
+        labelFrame.size.height += 20;
+        statusLabel.frame = labelFrame;
+        statusLabel.center.x = self.view.center.x;
+        
+        // update the prompt label
+        updatePromptLabel(for: frame, trackingState: frame.camera.trackingState);
+        
+        // update the canPlaceMarkers property
+        switch frame.worldMappingStatus {
+        case .extending, .mapped:
+            canPlaceMarkers = true;
+        default:
+            canPlaceMarkers = false;
         }
     }
     
@@ -196,6 +270,13 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             return;
         }
         
+        if (!canPlaceMarkers) {
+            let alert = UIAlertController(title: "Limited Tracking", message: "Markers should not be placed in limited tracking state, please move around a bit to better scan the area.", preferredStyle: .alert)
+            self.present(alert, animated: true, completion: nil);
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: { _ in alert.dismiss(animated: true, completion: nil)} );
+            return;
+        }
+        
         // okay, we didn't hit an existing marker so lets check if we can create a new one
         let query = sceneView.raycastQuery(from: touchLocation, allowing: .estimatedPlane, alignment: .any)!;
         guard let result = sceneView.session.raycast(query).first else {
@@ -213,5 +294,20 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         
         let editor = MemMarkerEditorViewController(marker: marker, removeOnCancel: true);
         present(editor, animated: true, completion: nil);
+    }
+    
+    private func updatePromptLabel(for frame: ARFrame, trackingState: ARCamera.TrackingState) {
+        // Update the UI to provide feedback on the state of the AR experience.
+        let message: String
+    }
+    
+    
+    @objc func saveButtonTapped() {
+        print("SAVE BUTTON TAPPED");
+        AppDataController.global.saveExperience(svc: self);
+    }
+    @objc func loadButtonTapped() {
+        print("LOAD BUTTON TAPPED");
+        AppDataController.global.loadExperience(svc: self);
     }
 }

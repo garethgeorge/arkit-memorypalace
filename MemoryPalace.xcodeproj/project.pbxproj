@@ -21,6 +21,9 @@
 		7FA862B124792D57007C3534 /* MemMarkerEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA862B024792D57007C3534 /* MemMarkerEditorViewController.swift */; };
 		7FBEA6302477950E00450EB8 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBEA62F2477950E00450EB8 /* PageViewController.swift */; };
 		7FF04B40248C4D070093B94C /* SceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF04B3F248C4D070093B94C /* SceneViewController.swift */; };
+		7FF04B42248C5FDF0093B94C /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF04B41248C5FDF0093B94C /* Utilities.swift */; };
+		7FF04B44248C600F0093B94C /* SnapshotAnchor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF04B43248C600F0093B94C /* SnapshotAnchor.swift */; };
+		7FF04B46248C80DA0093B94C /* RoundedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF04B45248C80DA0093B94C /* RoundedButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +64,9 @@
 		7FA862B024792D57007C3534 /* MemMarkerEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemMarkerEditorViewController.swift; sourceTree = "<group>"; };
 		7FBEA62F2477950E00450EB8 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		7FF04B3F248C4D070093B94C /* SceneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneViewController.swift; sourceTree = "<group>"; };
+		7FF04B41248C5FDF0093B94C /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		7FF04B43248C600F0093B94C /* SnapshotAnchor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotAnchor.swift; sourceTree = "<group>"; };
+		7FF04B45248C80DA0093B94C /* RoundedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +153,8 @@
 				7F1AE41D247504ED006B9E22 /* ViewController.swift */,
 				7F7FF5282478DA8D00BD351F /* Model */,
 				7FBEA6312477955900450EB8 /* Views */,
+				7FF04B41248C5FDF0093B94C /* Utilities.swift */,
+				7FF04B43248C600F0093B94C /* SnapshotAnchor.swift */,
 			);
 			path = ViewController;
 			sourceTree = "<group>";
@@ -162,6 +170,7 @@
 		7FBEA6312477955900450EB8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7FF04B45248C80DA0093B94C /* RoundedButton.swift */,
 				7FBEA62F2477950E00450EB8 /* PageViewController.swift */,
 				7FF04B3F248C4D070093B94C /* SceneViewController.swift */,
 				7FA862AE24791D5B007C3534 /* MemMarkerListViewController.swift */,
@@ -308,6 +317,9 @@
 				7FF04B40248C4D070093B94C /* SceneViewController.swift in Sources */,
 				7F1AE41E247504ED006B9E22 /* ViewController.swift in Sources */,
 				7FA862B124792D57007C3534 /* MemMarkerEditorViewController.swift in Sources */,
+				7FF04B46248C80DA0093B94C /* RoundedButton.swift in Sources */,
+				7FF04B44248C600F0093B94C /* SnapshotAnchor.swift in Sources */,
+				7FF04B42248C5FDF0093B94C /* Utilities.swift in Sources */,
 				7F1AE41A247504ED006B9E22 /* AppDelegate.swift in Sources */,
 				7F1A24E92475129C0066F187 /* Utils.swift in Sources */,
 			);

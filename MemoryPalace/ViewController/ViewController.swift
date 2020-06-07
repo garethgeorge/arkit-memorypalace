@@ -15,11 +15,7 @@ class ViewController: UIViewController {
 
     @IBOutlet var sceneView: ARSCNView!
     
-    var currentPlacement: SCNNode?
-    
     var pageController: PageViewController!;
-    
-    var pages: [UIView]!;
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,19 +42,9 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        // Create a session configuration
-        let configuration = ARWorldTrackingConfiguration()
-        configuration.planeDetection = [.horizontal, .vertical]; // find horizontal and vertical surfaces
-
-        // Run the view's session
-        sceneView.session.run(configuration);
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        // Pause the view's session
-        sceneView.session.pause()
+    override var shouldAutorotate: Bool {
+        return false
     }
 }
