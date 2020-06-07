@@ -231,6 +231,11 @@ class AppDataController {
             do {
                 let data = try NSKeyedArchiver.archivedData(withRootObject: map, requiringSecureCoding: true)
                 try data.write(to: self.mapSaveURL, options: [.atomic])
+                
+                let alert = UIAlertController(title: "Save Successful", message: "Your memory palace is successfully saved, tap load to restore it after closing the app", preferredStyle: .alert)
+                svc.present(alert, animated: true, completion: nil);
+                Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: { _ in alert.dismiss(animated: true, completion: nil)} );
+                
             } catch {
                 fatalError("Can't save map: \(error.localizedDescription)")
             }
