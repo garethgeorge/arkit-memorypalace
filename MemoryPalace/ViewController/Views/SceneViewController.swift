@@ -396,7 +396,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                   markerLabel.text = "Q: " + marker.question + "\n" + "A: " + marker.answer;
+                   markerLabel.text = "Q\(markerIdx):" + marker.question + "\n" + "A: " + marker.answer;
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
@@ -408,7 +408,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                    markerLabel.text = "Q: " + marker.question;
+                    markerLabel.text = "Q\(markerIdx):" + marker.question;
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
@@ -419,7 +419,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                    markerLabel.text = "A: " + marker.answer;
+                    markerLabel.text = "A\(markerIdx):" + marker.answer;
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
                    markerLabel.frame = CGRect(x: 0, y: 0, width: 150, height: 200);
