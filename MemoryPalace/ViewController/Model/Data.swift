@@ -43,16 +43,34 @@ class MemoryMarker: Codable {
 // struct to hold the app data
 struct AppData: Codable {
     // an array of memory markers used by the app
+    var palaceName: String = "";
     var memoryMarkers: [MemoryMarker] = [];
 }
 
 
 class AppDataController {
     private var appData: AppData;
+    public var savedPalaces: [String] = [];
     static var global: AppDataController!;
     
     init(appData: AppData) {
         self.appData = appData;
+        
+        do {
+            let savedPalacesData = try Data(contentsOf: self.getUrlForFile(name: ".savedpalaces"));
+            self.savedPalaces = try JSONDecoder().decode([String].self, from: savedPalacesData);
+            print("LOADED SAVED PALACES: ", savedPalaces);
+        } catch {
+            self.savedPalaces = [];
+        }
+    }
+    
+    func getPalaceName() -> String {
+        return appData.palaceName;
+    }
+    
+    func setPalaceName(name: String) {
+        appData.palaceName = name;
     }
     
     func serializeAppData() throws -> String  {
@@ -108,43 +126,23 @@ class AppDataController {
         }
     }
     
-    lazy var mapSaveURL: URL = {
+    func getUrlForFile(name: String) -> URL {
         do {
             return try FileManager.default
                 .url(for: .documentDirectory,
                      in: .userDomainMask,
                      appropriateFor: nil,
                      create: true)
-                .appendingPathComponent("map.arexperience")
+                .appendingPathComponent(name)
         } catch {
             fatalError("Can't get file save URL: \(error.localizedDescription)")
         }
-    }();
-    
-    lazy var markerSaveURL: URL = {
-        do {
-            return try FileManager.default
-                .url(for: .documentDirectory,
-                     in: .userDomainMask,
-                     appropriateFor: nil,
-                     create: true)
-                .appendingPathComponent("markers.data")
-        } catch {
-            fatalError("Can't get file save URL: \(error.localizedDescription)")
-        }
-    }();
-    
-    var mapDataFromFile: Data? {
-        return try? Data(contentsOf: mapSaveURL)
     }
     
-    var markerDataFromFile: Data? {
-        return try? Data(contentsOf: markerSaveURL)
-    }
-    
-    func loadExperience(svc: SceneViewController) {
+    func loadExperience(svc: SceneViewController, id: String) {
         do {
-            let jsonData = try Data(contentsOf: self.markerSaveURL, options: .mappedIfSafe);
+            let markerSaveURL = self.getUrlForFile(name: id + ".json");
+            let jsonData = try Data(contentsOf: markerSaveURL, options: .mappedIfSafe);
             let loadedAppData = try JSONDecoder().decode(AppData.self, from: jsonData);
             self.removeAllMarkers();
             appData = loadedAppData;
@@ -157,7 +155,8 @@ class AppDataController {
         }
         
         let worldMap: ARWorldMap = {
-            guard let data = mapDataFromFile
+            let mapSaveURL = self.getUrlForFile(name: id + ".map");
+            guard let data = try? Data(contentsOf: mapSaveURL)
                 else { fatalError("Map data should already be verified to exist before Load button is enabled.") }
             do {
                 guard let worldMap = try NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data)
@@ -203,17 +202,19 @@ class AppDataController {
         configuration.planeDetection = [.horizontal, .vertical];
         configuration.initialWorldMap = worldMap;
         svc.sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors]);
-        
-        
     }
     
-    func saveExperience(svc: SceneViewController) {
+    func saveExperience(svc: SceneViewController, id: String) {
         do {
+            let markerSaveURL = self.getUrlForFile(name: id + ".json");
             let jsonData = try JSONEncoder().encode(self.appData);
-            try jsonData.write(to: self.markerSaveURL, options: [.atomic]);
+            try jsonData.write(to: markerSaveURL, options: [.atomic]);
             print("saveExperience wrote marker data: " + String(data: jsonData, encoding: .utf8)!);
         } catch {
-            fatalError("Can't save marker data: \(error.localizedDescription)")
+            let alert = UIAlertController(title: "Save Error", message: "Can't save marker data: \(error.localizedDescription)", preferredStyle: .alert);
+            svc.present(alert, animated: true, completion: nil);
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: { _ in alert.dismiss(animated: true, completion: nil)} );
+            return ;
         }
         
         svc.sceneView.session.getCurrentWorldMap { worldMap, error in
@@ -231,17 +232,30 @@ class AppDataController {
             map.anchors.append(snapshotAnchor)
             
             do {
+                let mapSaveURL = self.getUrlForFile(name: id + ".map");
                 let data = try NSKeyedArchiver.archivedData(withRootObject: map, requiringSecureCoding: true)
-                try data.write(to: self.mapSaveURL, options: [.atomic])
+                try data.write(to: mapSaveURL, options: [.atomic])
                 
                 let alert = UIAlertController(title: "Save Successful", message: "Your memory palace is successfully saved, tap load to restore it after closing the app", preferredStyle: .alert)
                 svc.present(alert, animated: true, completion: nil);
                 Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: { _ in alert.dismiss(animated: true, completion: nil)} );
                 
+                // finally save the manifest with the names of the save files
+                if !(self.savedPalaces.contains(id)) {
+                    self.savedPalaces.append(id);
+                }
+                try self.saveSavedPalacesList();
             } catch {
                 fatalError("Can't save map: \(error.localizedDescription)")
             }
         }
+    }
+    
+    func saveSavedPalacesList() throws {
+        let savedPalacesFile = self.getUrlForFile(name: ".savedpalaces");
+        let jsonData = try JSONEncoder().encode(self.savedPalaces);
+        try jsonData.write(to: savedPalacesFile, options: [.atomic]);
+        print("saveSavedPalacesList wrote save file list: " + String(data: jsonData, encoding: .utf8)!);
     }
 }
 

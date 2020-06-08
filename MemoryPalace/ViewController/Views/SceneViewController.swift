@@ -394,12 +394,31 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     @objc func saveButtonTapped() {
         print("SAVE BUTTON TAPPED");
-        AppDataController.global.saveExperience(svc: self);
+        var alert = UIAlertController(title: "Save File Name?", message: "Enter a save file name for this memory palace", preferredStyle: .alert);
+        alert.addTextField(configurationHandler: {(textField: UITextField!) in
+            textField.placeholder = "Name"
+            if AppDataController.global.getPalaceName().count > 0 {
+                textField.text = AppDataController.global.getPalaceName()
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Done", style: .default, handler:{ (alertAction:UIAlertAction!) in
+            let textf = (alert.textFields?[0])! as UITextField
+            guard let fileName = textf.text else {
+                print("FAILED TO SAVE, NO FILENAME PROVIDED");
+                return ;
+            }
+            
+            AppDataController.global.setPalaceName(name: fileName);
+            AppDataController.global.saveExperience(svc: self, id: fileName);
+        }))
+        self.present(alert, animated: true, completion: nil)
     }
     
     @objc func loadButtonTapped() {
         print("LOAD BUTTON TAPPED");
-        AppDataController.global.loadExperience(svc: self);
+        let loadVc = MemoryPalaceListViewController();
+        loadVc.svc = self;
+        self.present(loadVc, animated: true, completion: nil);
     }
     
     func changeMarkerView(){
