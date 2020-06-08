@@ -1,0 +1,16 @@
+PODS:
+  - RGSColorSlider (0.1.1)
+
+DEPENDENCIES:
+  - RGSColorSlider
+
+SPEC REPOS:
+  trunk:
+    - RGSColorSlider
+
+SPEC CHECKSUMS:
+  RGSColorSlider: b045e5a4bd9f6fe568184e1ad35dee1f0cdf948f
+
+PODFILE CHECKSUM: cd607c39925b186422ea2c6596c33a3aa65a05c4
+
+COCOAPODS: 1.9.3
