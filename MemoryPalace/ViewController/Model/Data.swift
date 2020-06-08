@@ -32,7 +32,7 @@ class MemoryMarker: Codable {
     }
     
     func isValid() -> Bool {
-        return question.trimmingCharacters(in: .whitespaces) != "" && answer.trimmingCharacters(in: .whitespaces) != "";
+        return answer.trimmingCharacters(in: .whitespaces) != "";
     }
     
     private enum CodingKeys: String, CodingKey {
