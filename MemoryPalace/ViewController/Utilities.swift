@@ -2,8 +2,7 @@
 //  Utilities.swift
 //  MemoryPalace
 //
-//  Created by Gareth George on 6/6/20.
-//  Copyright © 2020 Gareth George. All rights reserved.
+//  Copyright © 2020 Gareth George and Dana Nguyen. All rights reserved.
 //
 
 import simd

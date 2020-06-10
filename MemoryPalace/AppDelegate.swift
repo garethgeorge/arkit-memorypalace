@@ -2,8 +2,7 @@
 //  AppDelegate.swift
 //  MemoryPalace
 //
-//  Created by Gareth George on 5/19/20.
-//  Copyright © 2020 Gareth George. All rights reserved.
+//  Copyright © 2020 Gareth George and Dana Nguyen. All rights reserved.
 //
 
 import UIKit

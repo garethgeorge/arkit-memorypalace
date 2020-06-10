@@ -2,8 +2,7 @@
 //  SceneViewController.swift
 //  MemoryPalace
 //
-//  Created by Gareth George on 6/6/20.
-//  Copyright © 2020 Gareth George. All rights reserved.
+//  Copyright © 2020 Gareth George and Dana Nguyen. All rights reserved.
 //
 
 import UIKit
@@ -69,8 +68,11 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         saveLoadContainer.alignment = .fill;
         saveLoadContainer.distribution = .fillEqually;
         saveLoadContainer.spacing = 5;
-        self.view.addSubview(saveLoadContainer);
+//        saveLoadContainer.addBackground(color: .white, alpha:0.3)
+
         
+        self.view.addSubview(saveLoadContainer);
+//        saveLoadContainer.backgroundColor?.withAlphaComponent(0.7);
         saveButton = RoundedButton();
         saveButton.setTitle("SAVE", for: .normal)
         saveButton.addTarget(self, action: #selector(self.saveButtonTapped), for: .touchUpInside);
@@ -81,6 +83,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         loadButton.addTarget(self, action: #selector(self.loadButtonTapped), for: .touchUpInside);
         saveLoadContainer.addArrangedSubview(loadButton);
         
+        
         // add gesture recognizer to sceneView
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSceneViewTap(_:)))
         singleTap.cancelsTouchesInView = false
@@ -90,9 +93,9 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         // segmented control for display mode
         segmentedControl = UISegmentedControl(frame: CGRect(x: 20, y: 50, width: self.view.frame.width - 40, height: 40));
         segmentedControl.backgroundColor = .clear
-        segmentedControl.insertSegment(withTitle: "Learn (Q+A)", at: 0, animated: true)
-        segmentedControl.insertSegment(withTitle: "Term  (Q)", at: 1, animated: true)
-        segmentedControl.insertSegment(withTitle: "Definition (A)", at: 2, animated: true)
+        segmentedControl.insertSegment(withTitle: "Memorize", at: 0, animated: true)
+        segmentedControl.insertSegment(withTitle: "Quiz", at: 1, animated: true)
+        segmentedControl.insertSegment(withTitle: "Test", at: 2, animated: true)
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.translatesAutoresizingMaskIntoConstraints = true
         segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged(_:)), for: .valueChanged);
@@ -188,6 +191,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
         return true;
     }
+    
     
     func session(_ session: ARSession, didFailWithError error: Error) {
         sessionInfoLabel.text = "Session failed: \(error.localizedDescription)";
@@ -426,7 +430,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                   markerLabel.text = "Q\(markerIdx+1):" + marker.question + "\n" + "A: " + marker.answer;
+                   markerLabel.text = "\(markerIdx+1)\n" + "Hint: " + marker.question + "\n" + "Answer: " + marker.answer;
                    markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
@@ -440,7 +444,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                   markerLabel.text = "Q\(markerIdx+1):" + marker.question;
+                   markerLabel.text = "\(markerIdx+1)\n" + "Hint: " + marker.question;
                    markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
 
                    markerLabel.numberOfLines = 0;
@@ -454,7 +458,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             for markerIdx in 0..<AppDataController.global.getMemoryMarkerCount() {
                 let marker = AppDataController.global.getMemoryMarker(idx: markerIdx);
                 if let markerLabel = marker.markerView as? UILabel {
-                   markerLabel.text = "A\(markerIdx+1):" + marker.answer;
+                   markerLabel.text = "\(markerIdx+1)";
                    markerLabel.font = UIFont(name:"HelveticaNeue-Bold", size:16.0);
                    markerLabel.numberOfLines = 0;
                    markerLabel.lineBreakMode = .byWordWrapping;
@@ -471,4 +475,14 @@ class SceneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         self.changeMarkerView()
     }
 
+}
+
+extension UIStackView {
+    func addBackground(color: UIColor, alpha: CGFloat) {
+        let subView = UIView(frame: bounds)
+        subView.backgroundColor = color
+        subView.backgroundColor?.withAlphaComponent(alpha)
+        subView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        insertSubview(subView, at: 0)
+    }
 }

@@ -2,8 +2,7 @@
 //  MemMarkerEditorViewController.swift
 //  MemoryPalace
 //
-//  Created by Gareth George on 5/23/20.
-//  Copyright © 2020 Gareth George. All rights reserved.
+//  Copyright © 2020 Gareth George and Dana Nguyen. All rights reserved.
 //
 
 import Foundation
@@ -69,11 +68,11 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         
         let questionFieldLabel = UILabel();
         questionFieldLabel.textColor = .secondaryLabel;
-        questionFieldLabel.text = "Question: ";
+        questionFieldLabel.text = "Hint: ";
         content.addArrangedSubview(questionFieldLabel);
         
         questionField = UITextField();
-        questionField.placeholder = "a fascinating question...";
+        questionField.placeholder = "a hint to help you remember...";
         questionField.text = marker.question;
         questionField.delegate = self;
         content.addArrangedSubview(questionField);
@@ -84,7 +83,7 @@ class MemMarkerEditorViewController : UIViewController, UITextFieldDelegate {
         content.addArrangedSubview(answerFieldLabel);
         
         answerField = UITextField();
-        answerField.placeholder = "a fascinating question...";
+        answerField.placeholder = "a fascinating answer...";
         answerField.text = marker.answer;
         answerField.delegate = self;
         content.addArrangedSubview(answerField);
